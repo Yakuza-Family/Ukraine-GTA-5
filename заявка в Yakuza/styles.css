@@ -1,0 +1,453 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap");
+
+:root {
+  color-scheme: dark;
+  font-family: "DM Sans", Arial, sans-serif;
+  color: #f4f1ed;
+  background: #101010;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --red: #d94336;
+  --muted: #9a9691;
+  --line: #34312f;
+  --panel: #191817;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 18% 35%, rgb(141 44 35 / 12%), transparent 35rem),
+    linear-gradient(135deg, #101010 0%, #151413 55%, #101010 100%);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.page {
+  width: min(1120px, calc(100% - 48px));
+  min-height: 100vh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  height: 98px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid rgb(255 255 255 / 9%);
+}
+
+.brand-logo {
+  width: 76px;
+  height: 76px;
+  flex: 0 0 76px;
+  display: block;
+}
+
+.brand-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.brand-name {
+  font: 700 20px/1 "Barlow Condensed", Impact, sans-serif;
+  letter-spacing: 2px;
+}
+
+.brand-name span {
+  color: var(--red);
+}
+
+.brand-rule {
+  width: 1px;
+  height: 22px;
+  margin-left: 9px;
+  background: #494542;
+}
+
+.brand-caption {
+  color: #aaa5a0;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.application {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.83fr) minmax(430px, 1.17fr);
+  align-items: center;
+  gap: clamp(44px, 8vw, 108px);
+  padding: 70px 0 76px;
+}
+
+.intro {
+  padding-bottom: 18px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--red);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.intro .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.intro .eyebrow span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 12px rgb(217 67 54 / 60%);
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin: 22px 0 17px;
+  font: 700 clamp(52px, 6vw, 76px)/0.94 "Barlow Condensed", Impact, sans-serif;
+  letter-spacing: -1.5px;
+}
+
+h1 span {
+  color: var(--red);
+}
+
+.intro-copy {
+  max-width: 340px;
+  margin-bottom: 34px;
+  color: #b1aca7;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.note {
+  max-width: 355px;
+  display: flex;
+  gap: 12px;
+  padding: 13px 15px;
+  border-left: 2px solid var(--red);
+  background: rgb(255 255 255 / 3%);
+}
+
+.note-symbol {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #75605b;
+  border-radius: 50%;
+  color: #e7a39b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.note p {
+  margin: 0;
+  color: #aaa5a0;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.form-card {
+  padding: clamp(24px, 4vw, 38px);
+  border: 1px solid #35312f;
+  background: linear-gradient(145deg, #1d1b1a, #171615);
+  box-shadow: 0 24px 90px rgb(0 0 0 / 28%);
+}
+
+.form-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.form-heading h2 {
+  margin: 8px 0 0;
+  font: 600 32px/1 "Barlow Condensed", Impact, sans-serif;
+  letter-spacing: 0.3px;
+}
+
+.form-index {
+  color: #6e6965;
+  font: 600 11px/1 "Barlow Condensed", Impact, sans-serif;
+  letter-spacing: 1.4px;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 19px 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #d1ccc7;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+.required {
+  color: var(--red);
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  border: 1px solid #3b3734;
+  border-radius: 0;
+  outline: none;
+  background: #131211;
+  color: #f4f1ed;
+  font-size: 12px;
+  font-weight: 400;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.field input {
+  height: 43px;
+  padding: 0 12px;
+}
+
+.field textarea {
+  min-height: 76px;
+  padding: 11px 12px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #716c67;
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: #a43c32;
+  box-shadow: 0 0 0 2px rgb(217 67 54 / 12%);
+}
+
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 20px;
+  color: #aaa5a0;
+  font-size: 10px;
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+.consent input {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  margin: 1px 0 0;
+  accent-color: var(--red);
+}
+
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 23px;
+}
+
+.required-hint {
+  margin: 0;
+  color: #827c77;
+  font-size: 10px;
+}
+
+.submit-button {
+  min-width: 190px;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding: 0 15px;
+  border: 1px solid var(--red);
+  background: var(--red);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, opacity 150ms ease;
+}
+
+.submit-button:not(:disabled):hover {
+  border-color: #ef6253;
+  background: #ef5142;
+}
+
+.submit-button:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+
+.submit-button:disabled {
+  border-color: #50403d;
+  background: #50403d;
+  cursor: not-allowed;
+}
+
+.submit-button span:last-child {
+  font-size: 17px;
+}
+
+.form-status {
+  min-height: 16px;
+  margin: 12px 0 0;
+  color: #918a84;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.form-status[data-state="success"] {
+  color: #9bd3a5;
+}
+
+.form-status[data-state="error"] {
+  color: #f09a8e;
+}
+
+.honeypot,
+.submission-frame {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.honeypot input {
+  position: absolute;
+  left: -10000px;
+}
+
+.page-footer {
+  min-height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid rgb(255 255 255 / 9%);
+  color: #77716d;
+  font: 600 10px/1 "Barlow Condensed", Impact, sans-serif;
+  letter-spacing: 1.5px;
+}
+
+@media (max-width: 760px) {
+  .page {
+    width: min(560px, calc(100% - 36px));
+  }
+
+  .brand {
+    height: 76px;
+  }
+
+  .application {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding: 45px 0 50px;
+  }
+
+  .intro {
+    padding-bottom: 0;
+  }
+
+  h1 {
+    margin-top: 17px;
+    font-size: clamp(54px, 14vw, 72px);
+  }
+
+  .intro-copy {
+    margin-bottom: 20px;
+  }
+
+  .note {
+    max-width: none;
+  }
+}
+
+@media (max-width: 430px) {
+  .page {
+    width: calc(100% - 28px);
+  }
+
+  .brand-caption {
+    font-size: 11px;
+  }
+
+  .application {
+    padding-top: 36px;
+  }
+
+  .form-card {
+    padding: 23px 18px;
+  }
+
+  .fields {
+    grid-template-columns: 1fr;
+  }
+
+  .field-wide {
+    grid-column: auto;
+  }
+
+  .form-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .submit-button {
+    width: 100%;
+  }
+
+  .page-footer {
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

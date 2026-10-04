@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101010">
+    <meta name="description" content="Подай заявку до сім'ї Yakuza.">
+    <link rel="icon" type="image/png" href="EE2156BC-09BC-4624-B251-CAFA8B431EBB.png">
+    <title>Заявка до сім'ї Yakuza</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      <header class="brand">
+        <a class="brand-logo" href="../index.html#home" aria-label="Yakuza — на головну">
+          <img src="EE2156BC-09BC-4624-B251-CAFA8B431EBB.png" alt="Логотип сім'ї Yakuza">
+        </a>
+        <span class="brand-name"><span>FAMILY</span></span>
+        <span class="brand-rule" aria-hidden="true"></span>
+        <span class="brand-caption">Набір до сім'ї</span>
+      </header>
+
+      <section class="application" aria-labelledby="page-title">
+        <div class="intro">
+          <p class="eyebrow"><span aria-hidden="true"></span> ВІДКРИТИЙ НАБІР</p>
+          <h1 id="page-title">Твоя історія<br>починається <span>тут.</span></h1>
+          <p class="intro-copy">Розкажи трохи про себе. Заповни заявку — наша команда зв'яжеться з тобою в Discord.</p>
+          <div class="note">
+            <span class="note-symbol" aria-hidden="true">!</span>
+            <p>Не вказуй паролі чи інші секретні дані. Потрібен лише твій ігровий нік та Discord.</p>
+          </div>
+        </div>
+
+        <form class="form-card" id="application-form" target="submission-frame" method="post">
+          <div class="form-heading">
+            <div>
+              <p class="eyebrow">АНКЕТА КАНДИДАТА</p>
+              <h2>Заявка до сім'ї</h2>
+            </div>
+            <span class="form-index" aria-hidden="true">01 / 01</span>
+          </div>
+
+          <div class="fields">
+            <label class="field">
+              <span>Ігровий нік <span class="required">*</span></span>
+              <input name="nickname" type="text" autocomplete="nickname" maxlength="60" placeholder="Як тебе знайти у грі" required>
+            </label>
+
+            <label class="field">
+              <span>Вік <span class="required">*</span></span>
+              <input name="age" type="number" min="1" max="100" inputmode="numeric" placeholder="Твій вік" required>
+            </label>
+
+            <label class="field">
+              <span>Discord <span class="required">*</span></span>
+              <input name="discord" type="text" autocomplete="off" maxlength="80" placeholder="Твій Discord" required>
+            </label>
+
+            <label class="field">
+              <span>Коли зазвичай онлайн?</span>
+              <input name="onlineTime" type="text" maxlength="100" placeholder="Наприклад, вечорами після 19:00">
+            </label>
+
+            <label class="field field-wide">
+              <span>Чому хочеш до сім'ї? <span class="required">*</span></span>
+              <textarea name="motivation" rows="4" maxlength="1000" placeholder="Розкажи кілька слів про себе та свою мотивацію" required></textarea>
+            </label>
+
+            <label class="field field-wide">
+              <span>У яких сім'ях раніше перебували?</span>
+              <textarea name="previousFamilies" rows="3" maxlength="1000" placeholder="Назвіть сім'ї або напишіть «не перебували»"></textarea>
+            </label>
+          </div>
+
+          <label class="consent">
+            <input name="consent" type="checkbox" required>
+            <span>Погоджуюся передати ці дані адміністрації сім'ї для розгляду заявки.</span>
+          </label>
+
+          <div class="form-footer">
+            <p class="required-hint"><span class="required">*</span> Обов'язкові поля</p>
+            <button class="submit-button" id="submit-button" type="submit" disabled>
+              <span>Надіслати заявку</span>
+              <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+          <p class="form-status" id="form-status" role="status" aria-live="polite">Форма ще не під'єднана до таблиці.</p>
+
+          <label class="honeypot" aria-hidden="true">
+            Не заповнюйте це поле
+            <input name="website" type="text" tabindex="-1" autocomplete="off">
+          </label>
+        </form>
+      </section>
+
+      <footer class="page-footer">
+        <span>YAKUZA FAMILY</span>
+        <span>ПОВАГА. ЄДНІСТЬ. РЕПУТАЦІЯ.</span>
+      </footer>
+    </main>
+
+    <iframe class="submission-frame" name="submission-frame" title="Результат надсилання заявки"></iframe>
+  </body>
+</html>
