@@ -159,9 +159,9 @@ function apiResponse_(status, details, requestId) {
 }
 
 function htmlResponse_(message) {
-  const encoded = JSON.stringify(encodeURIComponent(JSON.stringify(message)));
+  const payload = JSON.stringify(JSON.stringify(message));
   const html = '<!doctype html><html><body><script>'
-    + 'window.top.postMessage(JSON.parse(decodeURIComponent(' + encoded + ')),"*");'
+    + 'window.parent.parent.parent.postMessage(JSON.parse(' + payload + '),"*");'
     + '</script></body></html>';
   return HtmlService.createHtmlOutput(html)
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
