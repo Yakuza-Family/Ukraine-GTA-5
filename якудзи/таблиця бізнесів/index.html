@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111111">
+  <title>Таблиця бізнесів</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Serif+JP:wght@500;600;700&family=Oswald:wght@400;500;600;700&display=swap');
+    :root{color-scheme:dark;--bg:#101010;--panel:#171717;--line:#303030;--text:#f4f2f0;--muted:#a4a09e;--red:#f0443a;--green:#53cf88;--font:'IBM Plex Sans',sans-serif;--display:'Oswald',sans-serif}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 var(--font);min-height:100vh}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .shell{width:min(1220px,calc(100% - 48px));margin:auto}
+    header{height:94px;border-bottom:1px solid #292929;display:flex;align-items:center}
+    .topbar{display:flex;justify-content:space-between;align-items:center;width:100%}
+    .brand{display:flex;align-items:center;gap:16px;color:var(--text);text-decoration:none}
+    .brand img{width:64px;height:64px;object-fit:cover;border-radius:4px;border:1px solid #3e2524}
+    .brand-name{font:700 19px var(--display);letter-spacing:0}
+    .brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .account{display:flex;align-items:center;gap:12px}
+    .account-state{font-size:13px;color:var(--muted)}
+    .button{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:5px;padding:9px 14px;font-weight:600;transition:background .16s,border-color .16s}
+    .button:hover{border-color:#69615f;background:#222}
+    .button-primary{background:var(--red);border-color:var(--red);color:white}
+    .button-primary:hover{background:#d9332a;border-color:#d9332a}
+    .button-quiet{padding:7px 10px;font-size:13px}
+    main{padding:46px 0 80px}
+    .intro{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding:0 0 30px}
+    .eyebrow{color:var(--red);font:700 11px var(--display);text-transform:uppercase;letter-spacing:1.4px}
+    h1{font:700 clamp(29px,4vw,42px)/1.1 var(--display);letter-spacing:0;margin:9px 0 0}
+    .intro p{color:var(--muted);margin:10px 0 0;max-width:560px}
+    .tabs{display:flex;gap:25px;border-bottom:1px solid var(--line);margin-bottom:24px}
+    .tab{padding:0 1px 13px;border:0;border-bottom:2px solid transparent;background:none;color:#a7a3a1;font-weight:600}
+    .tab[aria-selected="true"]{color:white;border-bottom-color:var(--red)}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:14px}
+    .toolbar-left{display:flex;align-items:center;gap:12px;flex:1}
+    .search{position:relative;max-width:350px;width:100%}
+    .search input{width:100%;height:40px;padding:0 12px 0 37px;color:var(--text);background:#181818;border:1px solid var(--line);border-radius:5px;outline:none}
+    .search input:focus,input:focus,select:focus,textarea:focus{border-color:#a43b36;outline:2px solid #a43b3638}
+    .search-mark{position:absolute;left:12px;top:9px;color:#9e9996;font-size:17px}
+    .count{color:var(--muted);font-size:13px;white-space:nowrap}
+    .access-note{border:1px solid #34302f;background:#191817;color:#c2bdb9;padding:12px 15px;border-radius:5px;font-size:13px;margin:0 0 14px}
+    .access-note strong{color:white}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+    table{border-collapse:collapse;width:100%;min-width:760px;text-align:left}
+    th{padding:13px 16px;color:#a5a09d;background:#1c1b1b;font-size:11px;text-transform:uppercase;letter-spacing:.8px;font-weight:700}
+    td{padding:15px 16px;border-top:1px solid #2a2928;vertical-align:middle}
+    tr:hover td{background:#1b1a1a}
+    .business{display:flex;align-items:center;gap:12px;min-width:230px}
+    .business-photo{width:44px;height:44px;flex:0 0 44px;border-radius:4px;background:#252322;object-fit:cover;border:1px solid #393635}
+    .photo-fallback{display:grid;place-items:center;color:#b0aaa6;font:700 16px var(--display)}
+    .business-name{font-weight:700;color:#f5f2f0}
+    .business-grid{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:16px;padding:18px;background:#fff;color:#111;border:1px solid #bcbcbc}
+    .sheet-group{min-width:0}
+    .sheet-group table{width:100%;min-width:0;border-collapse:collapse;background:#fff;color:#111;font:12px Arial,sans-serif;text-align:center}
+    .sheet-group th,.sheet-group td{height:26px;padding:4px 7px;border:1px solid #292929}
+    .sheet-group th{background:#fff;color:#111;font-size:12px;letter-spacing:0;text-transform:none}
+    .sheet-group th:first-child{text-align:left}
+    .sheet-group td.owner-cell{background:#00ed16;color:#050505;min-width:76px}
+    .sheet-group td.owner-cell.inactive{background:#ef3030;color:#fff}
+    .sheet-group .row-actions{justify-content:center;gap:3px}
+    .sheet-group .row-actions .button{padding:3px 5px;background:#f6f6f6;color:#171717;border-color:#aaa;font-size:10px}
+    .sheet-group .number-cell{width:42px}
+    .category,.contact{color:#b5b0ad;font-size:13px}
+    .status{display:inline-flex;align-items:center;gap:7px;color:#d4d0cd;font-size:13px;white-space:nowrap}
+    .dot{width:8px;height:8px;background:var(--red);border-radius:50%}
+    .status.active .dot{background:var(--green)}
+    .row-actions{display:flex;gap:7px;justify-content:flex-end}
+    .row-actions .button{padding:6px 9px;font-size:12px}
+    .empty{padding:54px 20px;text-align:center;color:var(--muted);display:none}
+    .empty strong{display:block;color:#f0ece9;font:600 18px var(--display);margin-bottom:5px}
+    .empty .button{margin-top:16px}
+    .muted-dash{color:#77716e}
+    dialog{width:min(500px,calc(100% - 32px));padding:0;color:var(--text);background:#191817;border:1px solid #413a38;border-radius:7px;box-shadow:0 22px 90px #000a}
+    dialog::backdrop{background:#000a;backdrop-filter:blur(3px)}
+    .dialog-head{display:flex;align-items:flex-start;justify-content:space-between;padding:21px 22px;border-bottom:1px solid var(--line)}
+    .dialog-head h2{font:600 20px var(--display);margin:0}
+    .dialog-head p{font-size:13px;color:var(--muted);margin:4px 0 0}
+    .close{background:none;border:0;color:#aaa;font-size:22px;line-height:1;padding:0 2px}
+    .form{padding:20px 22px 22px;display:grid;gap:14px}
+    .field{display:grid;gap:6px}
+    .field label{font-size:12px;font-weight:600;color:#c9c4c1}
+    .field input,.field select,.field textarea{width:100%;padding:10px 11px;background:#101010;border:1px solid var(--line);border-radius:4px;color:var(--text);outline:none}
+    .field textarea{resize:vertical;min-height:76px}
+    .form-actions{display:flex;justify-content:flex-end;gap:9px;padding-top:4px}
+    .login-error{margin:0;color:#ff6b63;font-size:13px}
+    .login-help{padding:0 22px 21px;color:#928c88;font-size:12px}
+    .toast{position:fixed;right:24px;bottom:24px;background:#252321;border:1px solid #4a413e;color:#f4f2f0;padding:12px 16px;border-radius:5px;box-shadow:0 6px 25px #0008;opacity:0;transform:translateY(8px);transition:.18s;pointer-events:none}
+    .toast.show{opacity:1;transform:translateY(0)}
+    footer{border-top:1px solid #292929;color:#807a76;font-size:12px;padding:20px 0 28px}
+    .footer-content{display:flex;justify-content:space-between;align-items:center;gap:16px}
+    .footer-socials{display:flex;align-items:center;gap:8px}
+    @media(max-width:650px){.shell{width:min(100% - 30px,1220px)}header{height:78px}.brand img{height:50px;width:50px}.brand{gap:10px}.brand-name{font-size:16px}.brand-sub{font-size:11px}.account-state{display:none}main{padding-top:32px}.intro{display:block;padding-bottom:24px}.intro>.button{margin-top:18px}.toolbar{align-items:flex-start}.toolbar-left{display:block}.count{display:block;margin-top:8px}.toolbar>.button{white-space:nowrap}.tabs{gap:19px}.access-note{font-size:12px}.business-grid{gap:10px;padding:10px}.sheet-group th,.sheet-group td{padding:4px 5px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell topbar">
+      <a class="brand" href="../index.html#home" aria-label="Повернутися на головну Yakuza">
+        <img src="EE2156BC-09BC-4624-B251-CAFA8B431EBB.png" alt="Логотип">
+        <div><div class="brand-name">БІЗНЕСИ</div><div class="brand-sub">Єдиний каталог</div></div>
+      </a>
+      <div class="account"><span class="account-state" id="accountState">Перегляд доступний усім</span><button class="button" id="loginButton" type="button">Увійти</button></div>
+    </div>
+  </header>
+  <main class="shell" id="businesses">
+    <section class="intro">
+      <div><div class="eyebrow">Каталог · 2026</div><h1>Таблиця бізнесів</h1><p>Перелік бізнесів, номерів точок і власників.</p></div>
+    </section>
+    <nav class="tabs" aria-label="Розділи"><button class="tab" type="button" aria-selected="true">Таблиця бізнесів</button></nav>
+    <div class="access-note" id="accessNote"><strong>Відкритий перегляд.</strong> Увійдіть, щоб додавати й редагувати бізнеси.</div>
+    <section aria-label="Список бізнесів">
+      <div class="toolbar">
+        <div class="toolbar-left"><label class="search"><span class="search-mark" aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="Пошук бізнесів або номерів" aria-label="Пошук бізнесів"></label><span class="count" id="count">0 бізнесів</span></div>
+        <button class="button button-primary" id="addButton" type="button" hidden>+ Додати бізнес</button>
+      </div>
+      <div class="business-grid" id="businessGroups"></div>
+      <div class="empty" id="emptyState"><strong>Поки що немає бізнесів</strong><span id="emptyText">Авторизований користувач може додати перший запис.</span><br><button class="button button-primary" id="emptyAddButton" type="button" hidden>+ Додати бізнес</button></div>
+    </section>
+  </main>
+  <footer><div class="shell footer-content"><span>Каталог бізнесів</span><span class="footer-socials"><a class="button button-quiet" href="https://discord.gg/XWFjpaVDbg" target="_blank" rel="noopener noreferrer">Discord</a><a class="button button-quiet" href="https://t.me/+ybh6H1kkbE5hN2Qy" target="_blank" rel="noopener noreferrer">Telegram NEWS</a></span></div></footer>
+  <dialog id="loginDialog">
+    <div class="dialog-head"><div><h2>Вхід до каталогу</h2><p>Демонстраційний режим редагування</p></div><button class="close" type="button" data-close aria-label="Закрити">×</button></div>
+    <form class="form" id="loginForm">
+      <div class="field"><label for="loginEmail">Електронна пошта</label><input id="loginEmail" type="email" placeholder="name@example.com" required autocomplete="email"></div>
+      <div class="field"><label for="loginPassword">Пароль</label><input id="loginPassword" type="password" placeholder="Введіть пароль" required autocomplete="current-password"></div>
+      <p class="login-error" id="loginError" role="alert" hidden>Неправильний логін або пароль.</p>
+      <div class="form-actions"><button class="button" type="button" data-close>Скасувати</button><button class="button button-primary" type="submit">Увійти в демо</button></div>
+    </form>
+    <div class="login-help">Перевірка входу виконується у браузері й не замінює серверну авторизацію.</div>
+  </dialog>
+  <dialog id="businessDialog">
+    <div class="dialog-head"><div><h2 id="businessDialogTitle">Новий бізнес</h2><p>Інформація буде збережена в цьому браузері</p></div><button class="close" type="button" data-close aria-label="Закрити">×</button></div>
+    <form class="form" id="businessForm">
+      <input id="businessId" type="hidden">
+      <div class="field"><label for="businessName">Назва бізнесу *</label><input id="businessName" required maxlength="80" placeholder="Наприклад, АЗС"></div>
+      <div class="field"><label for="businessNumber">Номер точки</label><input id="businessNumber" type="number" min="1" max="9999" placeholder="Залиште порожнім для одного бізнесу"></div>
+      <div class="field"><label for="businessOwner">Власник</label><input id="businessOwner" maxlength="60" value="YAKUZA"></div>
+      <div class="field"><label for="businessStatus">Колір власника</label><select id="businessStatus"><option value="active">Зелений</option><option value="inactive">Червоний</option></select></div>
+      <div class="form-actions"><button class="button" type="button" data-close>Скасувати</button><button class="button button-primary" type="submit">Зберегти</button></div>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    const storageKey = 'business-directory-records-v2';
+    const legacyStorageKey = 'business-directory-records-v1';
+    const sessionKey = 'business-directory-demo-user';
+    const demoCredentials = {email: 'yakuzaukr01@gmail.com', password: 'Yakuza_ukr001'};
+    let businesses = loadBusinesses();
+    let isLoggedIn = sessionStorage.getItem(sessionKey) === 'true';
+    const groupsElement = document.getElementById('businessGroups');
+    const loginDialog = document.getElementById('loginDialog');
+    const businessDialog = document.getElementById('businessDialog');
+
+    function createDefaultBusinesses() {
+      const numberedGroups = [
+        ['АЗС', 25],
+        ['Маркет 24/7', 19],
+        ['Одежда', 14],
+        ['Барберка', 7],
+        ['Мойка', 3],
+        ['СТО', 5],
+        ['Рыбалка', 3],
+        ['Эл. заправки', 4],
+        ['LSC', 7],
+        ['Амунка', 11],
+        ['Тату-салон', 6]
+      ];
+      const numbered = numberedGroups.flatMap(([name, count]) => Array.from({length: count}, (_, index) => ({
+        id: `${name}-${index + 1}`,
+        name,
+        number: String(index + 1),
+        owner: 'YAKUZA',
+        status: 'active'
+      })));
+      const singleBusinesses = [
+        'True Clothes', 'Люкс автосалон', 'Автосалон UG', 'Эко. автосалон', 'Бар', 'Маски',
+        'Салон лодок', 'Авиасалон', 'Салон фуду', 'Закусочная', 'Казино', 'Магазин сумок', 'Магазин охоты'
+      ].map(name => ({id: `single-${name}`, name, number: '', owner: 'YAKUZA', status: 'active'}));
+      return [...numbered, ...singleBusinesses];
+    }
+
+    function loadBusinesses() {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved !== null) {
+          const records = JSON.parse(saved);
+          if (!Array.isArray(records)) return createDefaultBusinesses();
+          const corrected = records.map(item => item.name === 'Охрана' ? {...item, name: 'Одежда'} : item);
+          if (corrected.some((item, index) => item.name !== records[index].name)) {
+            localStorage.setItem(storageKey, JSON.stringify(corrected));
+          }
+          return corrected;
+        }
+        const initial = createDefaultBusinesses();
+        const legacy = JSON.parse(localStorage.getItem(legacyStorageKey) || '[]');
+        if (Array.isArray(legacy)) {
+          initial.push(...legacy.map(item => ({
+            id: `legacy-${item.id}`,
+            name: item.name,
+            number: '',
+            owner: item.owner || 'YAKUZA',
+            status: item.status || 'active'
+          })));
+        }
+        localStorage.setItem(storageKey, JSON.stringify(initial));
+        return initial;
+      } catch {
+        return createDefaultBusinesses();
+      }
+    }
+
+    function saveBusinesses() {
+      localStorage.setItem(storageKey, JSON.stringify(businesses));
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+    }
+
+    function render() {
+      const query = document.getElementById('searchInput').value.trim().toLocaleLowerCase('uk');
+      const filtered = businesses.filter(item => `${item.name} ${item.number || ''} ${item.owner || ''}`.toLocaleLowerCase('uk').includes(query));
+      document.getElementById('count').textContent = `${filtered.length} точок`;
+      document.getElementById('loginButton').textContent = isLoggedIn ? 'Вийти' : 'Увійти';
+      document.getElementById('accountState').textContent = isLoggedIn ? 'Режим редагування' : 'Перегляд доступний усім';
+      document.getElementById('accessNote').innerHTML = isLoggedIn ? '<strong>Ви увійшли в демо-режим.</strong> Можете додавати, редагувати й видаляти записи.' : '<strong>Відкритий перегляд.</strong> Увійдіть, щоб додавати й редагувати бізнеси.';
+      document.getElementById('addButton').hidden = !isLoggedIn;
+      document.getElementById('emptyAddButton').hidden = !isLoggedIn;
+      document.getElementById('emptyText').textContent = query ? 'За цим запитом нічого не знайдено.' : isLoggedIn ? 'Додайте перший запис до каталогу.' : 'Авторизований користувач може додати перший запис.';
+      const grouped = new Map();
+      filtered.forEach(item => {
+        if (!grouped.has(item.name)) grouped.set(item.name, []);
+        grouped.get(item.name).push(item);
+      });
+      groupsElement.innerHTML = Array.from(grouped, ([name, items]) => {
+        const hasNumbers = items.some(item => item.number);
+        const header = `${escapeHtml(name)}${hasNumbers ? ' №:' : ''}`;
+        const actionsHeading = isLoggedIn ? '<th>Дії</th>' : '';
+        const itemRows = items.map(item => `<tr><td class="number-cell">${escapeHtml(item.number || '')}</td><td class="owner-cell ${item.status === 'inactive' ? 'inactive' : ''}">${escapeHtml(item.owner || '')}</td>${isLoggedIn ? `<td><div class="row-actions"><button class="button" type="button" data-edit="${escapeHtml(item.id)}">Редагувати</button><button class="button" type="button" data-delete="${escapeHtml(item.id)}" aria-label="Видалити ${escapeHtml(item.name)} ${escapeHtml(item.number || '')}">Видалити</button></div></td>` : ''}</tr>`).join('');
+        return `<section class="sheet-group"><table aria-label="${escapeHtml(name)}"><thead><tr><th>${header}</th><th>Владелец:</th>${actionsHeading}</tr></thead><tbody>${itemRows}</tbody></table></section>`;
+      }).join('');
+      document.getElementById('emptyState').style.display = filtered.length ? 'none' : 'block';
+    }
+
+    function openBusinessForm(item) {
+      document.getElementById('businessForm').reset();
+      document.getElementById('businessId').value = item?.id || '';
+      document.getElementById('businessDialogTitle').textContent = item ? 'Редагувати бізнес' : 'Новий бізнес';
+      if (item) {
+        document.getElementById('businessName').value = item.name;
+        document.getElementById('businessNumber').value = item.number || '';
+        document.getElementById('businessOwner').value = item.owner || '';
+        document.getElementById('businessStatus').value = item.status || 'active';
+      }
+      businessDialog.showModal();
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      window.setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    document.getElementById('loginButton').addEventListener('click', () => {
+      if (isLoggedIn) {
+        isLoggedIn = false;
+        sessionStorage.removeItem(sessionKey);
+        render();
+        showToast('Ви вийшли з режиму редагування');
+      } else {
+        document.getElementById('loginError').hidden = true;
+        loginDialog.showModal();
+      }
+    });
+    document.getElementById('loginForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const password = document.getElementById('loginPassword').value;
+      if (email !== demoCredentials.email || password !== demoCredentials.password) {
+        document.getElementById('loginError').hidden = false;
+        return;
+      }
+      document.getElementById('loginError').hidden = true;
+      isLoggedIn = true;
+      sessionStorage.setItem(sessionKey, 'true');
+      loginDialog.close();
+      render();
+      showToast('Увімкнено демо-режим редагування');
+    });
+    document.getElementById('addButton').addEventListener('click', () => openBusinessForm());
+    document.getElementById('emptyAddButton').addEventListener('click', () => openBusinessForm());
+    document.getElementById('searchInput').addEventListener('input', render);
+    groupsElement.addEventListener('click', event => {
+      const editButton = event.target.closest('[data-edit]');
+      const deleteButton = event.target.closest('[data-delete]');
+      if (editButton && isLoggedIn) {
+        const item = businesses.find(business => business.id === editButton.dataset.edit);
+        if (item) openBusinessForm(item);
+      }
+      if (deleteButton && isLoggedIn) {
+        const item = businesses.find(business => business.id === deleteButton.dataset.delete);
+        if (item && window.confirm(`Видалити бізнес «${item.name}»?`)) {
+          businesses = businesses.filter(business => business.id !== item.id);
+          saveBusinesses();
+          render();
+          showToast('Бізнес видалено');
+        }
+      }
+    });
+    document.getElementById('businessForm').addEventListener('submit', event => {
+      event.preventDefault();
+      if (!isLoggedIn) return;
+      const id = document.getElementById('businessId').value;
+      const record = {
+        id: id || (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`),
+        name: document.getElementById('businessName').value.trim(),
+        number: document.getElementById('businessNumber').value,
+        owner: document.getElementById('businessOwner').value.trim(),
+        status: document.getElementById('businessStatus').value
+      };
+      if (id) businesses = businesses.map(item => item.id === id ? record : item);
+      else businesses.push(record);
+      saveBusinesses();
+      businessDialog.close();
+      render();
+      showToast(id ? 'Зміни збережено' : 'Бізнес додано');
+    });
+    document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
+    render();
+  </script>
+</body>
+</html>
