@@ -390,5 +390,4 @@ openDatabase().then((openedDatabase) => {
 }).catch(() => showToast("Локальне сховище недоступне; спільні посилання працюють окремо."));
 
 loadMedia();
-window.setInterval(loadMedia, 60000);
 renderAccessState();
