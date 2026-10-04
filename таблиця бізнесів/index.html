@@ -104,7 +104,7 @@
         <img src="EE2156BC-09BC-4624-B251-CAFA8B431EBB.png" alt="Логотип">
         <div><div class="brand-name">БІЗНЕСИ</div><div class="brand-sub">Єдиний каталог</div></div>
       </a>
-      <div class="account"><span class="account-state" id="accountState">Перегляд доступний усім</span><button class="button" id="loginButton" type="button">Увійти</button></div>
+      <div class="account"><span class="account-state" id="accountState">Перегляд доступний усім</span><a class="button" href="../заявка%20в%20Yakuza/applications.html">Таблиця заявок</a><button class="button" id="loginButton" type="button">Увійти</button></div>
     </div>
   </header>
   <main class="shell" id="businesses">
@@ -131,7 +131,7 @@
       <p class="login-error" id="loginError" role="alert" hidden>Неправильний логін або пароль.</p>
       <div class="form-actions"><button class="button" type="button" data-close>Скасувати</button><button class="button button-primary" type="submit">Увійти в демо</button></div>
     </form>
-    <div class="login-help">Перевірка входу виконується у браузері й не замінює серверну авторизацію.</div>
+    <div class="login-help">Вхід перевіряється сервером. Дані кабінету налаштовує адміністратор у Script Properties Apps Script.</div>
   </dialog>
   <dialog id="businessDialog">
     <div class="dialog-head"><div><h2 id="businessDialogTitle">Новий бізнес</h2><p>Інформація буде збережена в цьому браузері</p></div><button class="close" type="button" data-close aria-label="Закрити">×</button></div>
@@ -145,13 +145,14 @@
     </form>
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="../auth.js"></script>
   <script>
     const storageKey = 'business-directory-records-v2';
     const legacyStorageKey = 'business-directory-records-v1';
     const sessionKey = 'business-directory-demo-user';
-    const demoCredentials = {email: 'yakuzaukr01@gmail.com', password: 'Yakuza_ukr001'};
+    let sessionToken = sessionStorage.getItem(sessionKey) || '';
     let businesses = loadBusinesses();
-    let isLoggedIn = sessionStorage.getItem(sessionKey) === 'true';
+    let isLoggedIn = Boolean(sessionToken);
     const groupsElement = document.getElementById('businessGroups');
     const loginDialog = document.getElementById('loginDialog');
     const businessDialog = document.getElementById('businessDialog');
@@ -267,31 +268,74 @@
       window.setTimeout(() => toast.classList.remove('show'), 2400);
     }
 
-    document.getElementById('loginButton').addEventListener('click', () => {
+    document.getElementById('loginButton').addEventListener('click', async () => {
       if (isLoggedIn) {
         isLoggedIn = false;
+        const token = sessionToken;
+        sessionToken = '';
         sessionStorage.removeItem(sessionKey);
         render();
         showToast('Ви вийшли з режиму редагування');
+        if (token) {
+          try {
+            await window.YakuzaAuth.request('logout', {token});
+          } catch (error) {
+            showToast(error.message || 'Не вдалося завершити сеанс на сервері');
+          }
+        }
       } else {
         document.getElementById('loginError').hidden = true;
         loginDialog.showModal();
       }
     });
-    document.getElementById('loginForm').addEventListener('submit', event => {
+    document.getElementById('loginForm').addEventListener('submit', async event => {
       event.preventDefault();
       const email = document.getElementById('loginEmail').value.trim().toLowerCase();
       const password = document.getElementById('loginPassword').value;
-      if (email !== demoCredentials.email || password !== demoCredentials.password) {
+      const submitButton = document.querySelector('#loginForm [type="submit"]');
+      submitButton.disabled = true;
+      try {
+        const token = await window.YakuzaAuth.authenticate(email, password);
+        if (!token) {
+          document.getElementById('loginError').textContent = 'Неправильний логін або пароль.';
+          document.getElementById('loginError').hidden = false;
+          return;
+        }
+        sessionToken = token;
+        isLoggedIn = true;
+        sessionStorage.setItem(sessionKey, token);
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('loginError').hidden = true;
+        loginDialog.close();
+        if (sessionToken === 'true') {
+          sessionToken = '';
+          isLoggedIn = false;
+          sessionStorage.removeItem(sessionKey);
+        }
+        render();
+        if (sessionToken) {
+          window.YakuzaAuth.request('verify', {token: sessionToken}).then(response => {
+            isLoggedIn = response.status === 'success';
+            if (!isLoggedIn) {
+              sessionToken = '';
+              sessionStorage.removeItem(sessionKey);
+            }
+            render();
+          }).catch(error => {
+            isLoggedIn = false;
+            sessionToken = '';
+            sessionStorage.removeItem(sessionKey);
+            render();
+            showToast(error.message || 'Не вдалося перевірити сеанс');
+          });
+        }
+        showToast('Вхід виконано');
+      } catch (error) {
+        document.getElementById('loginError').textContent = error.message || 'Не вдалося виконати вхід';
         document.getElementById('loginError').hidden = false;
-        return;
+      } finally {
+        submitButton.disabled = false;
       }
-      document.getElementById('loginError').hidden = true;
-      isLoggedIn = true;
-      sessionStorage.setItem(sessionKey, 'true');
-      loginDialog.close();
-      render();
-      showToast('Увімкнено демо-режим редагування');
     });
     document.getElementById('addButton').addEventListener('click', () => openBusinessForm());
     document.getElementById('emptyAddButton').addEventListener('click', () => openBusinessForm());

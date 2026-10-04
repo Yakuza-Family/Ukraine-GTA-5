@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101010">
+    <meta name="description" content="Приватна таблиця заявок до сім'ї Yakuza.">
+    <link rel="icon" type="image/png" href="EE2156BC-09BC-4624-B251-CAFA8B431EBB.png">
+    <title>Таблиця заявок — Yakuza</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="../auth.js" defer></script>
+    <script src="applications.js" defer></script>
+  </head>
+  <body>
+    <main class="page applications-page">
+      <header class="brand">
+        <a class="brand-logo" href="../index.html#home" aria-label="Yakuza — на головну">
+          <img src="EE2156BC-09BC-4624-B251-CAFA8B431EBB.png" alt="Логотип сім'ї Yakuza">
+        </a>
+        <span class="brand-name"><span>FAMILY</span></span>
+        <span class="brand-rule" aria-hidden="true"></span>
+        <span class="brand-caption">Таблиця заявок</span>
+      </header>
+
+      <section aria-labelledby="applications-title">
+        <div class="applications-heading">
+          <div>
+            <p class="eyebrow">YAKUZA / АДМІНІСТРАЦІЯ</p>
+            <h1 id="applications-title">Таблиця <span>заявок.</span></h1>
+            <p class="intro-copy">Перегляд доступний після входу в кабінет.</p>
+          </div>
+          <div class="applications-actions" id="applications-actions" hidden>
+            <button class="applications-button" id="refresh-applications" type="button">ОНОВИТИ</button>
+            <button class="applications-button" id="logout-applications" type="button">ВИЙТИ</button>
+          </div>
+        </div>
+
+        <section class="applications-panel">
+          <form class="applications-login" id="applications-login">
+            <h2>Вхід до кабінету</h2>
+            <label class="field">
+              <span>Електронна пошта</span>
+              <input id="applications-email" type="email" autocomplete="username" required>
+            </label>
+            <label class="field">
+              <span>Пароль</span>
+              <input id="applications-password" type="password" autocomplete="current-password" required>
+            </label>
+            <button class="submit-button" id="applications-login-button" type="submit">
+              <span>Увійти та переглянути заявки</span>
+              <span aria-hidden="true">↗</span>
+            </button>
+          </form>
+          <p class="applications-state" id="applications-login-state" role="status" aria-live="polite"></p>
+
+          <div class="applications-table-wrap" id="applications-table-wrap" hidden>
+            <table class="applications-table">
+              <thead>
+                <tr>
+                  <th>Дата</th>
+                  <th>Ігровий нік</th>
+                  <th>Вік</th>
+                  <th>Discord</th>
+                  <th>Коли онлайн</th>
+                  <th>Мотивація</th>
+                  <th>Попередні сім'ї</th>
+                </tr>
+              </thead>
+              <tbody id="applications-rows"></tbody>
+            </table>
+            <p class="applications-empty" id="applications-empty" hidden>Поки що заявок немає.</p>
+          </div>
+        </section>
+      </section>
+
+      <footer class="page-footer">
+        <span>YAKUZA FAMILY</span>
+        <span>ПОВАГА. ЄДНІСТЬ. РЕПУТАЦІЯ.</span>
+      </footer>
+    </main>
+  </body>
+</html>

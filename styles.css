@@ -28,6 +28,9 @@ a { color: inherit; text-decoration: none; }
 .brand-copy { display: flex; flex-direction: column; gap: 2px; }
 .brand-copy strong { font-family: var(--font-display); font-size: 22px; line-height: 1; letter-spacing: 1px; }
 .brand-copy small { color: var(--muted); font-size: 8px; font-weight: 700; letter-spacing: 1.5px; }
+.applications-link { margin-left: auto; padding: 10px 12px; border: 1px solid #47403e; color: #e3dfd8; font-size: 9px; font-weight: 800; letter-spacing: .7px; white-space: nowrap; }
+.applications-link:hover { border-color: var(--red); color: white; }
+.applications-link span { margin-left: 6px; color: var(--red); }
 .top-nav { height: 100%; display: flex; align-items: center; gap: 30px; }
 .nav-link { height: 100%; display: grid; place-items: center; position: relative; color: #989898; font-size: 9px; font-weight: 800; letter-spacing: 1.2px; transition: color .2s; }
 .nav-link::after { content: ""; position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; background: var(--red); transform: scaleX(0); transform-origin: left; transition: transform .22s ease; }
@@ -264,6 +267,7 @@ h1 span { color: var(--red); }
 .media-login-button:hover { border-color: var(--red); color: white; }
 .media-access-note { margin: 6px 0 0; color: #aaa; font-size: 9px; }
 .media-login-error { margin: 0; color: #ff6b63; font-size: 11px; }
+.media-login-error:not([hidden]) + .media-login-error { margin-top: 8px; color: #aaa; }
 @media (min-width: 1441px) { .map-viewport { height: min(48vw, 680px); } }
 @media (max-width: 920px) {
   .app-shell { width: calc(100% - 40px); }
@@ -279,9 +283,10 @@ h1 span { color: var(--red); }
   .brand-logo { width: 42px; height: 42px; }
   .brand-copy strong { font-size: 19px; }
   .brand-copy small { font-size: 7px; }
-  .top-nav { order: 3; width: 100%; height: 35px; justify-content: space-between; gap: 8px; }
-  .nav-link { font-size: 8px; letter-spacing: .7px; }
+  .top-nav { order: 3; width: 100%; height: 35px; justify-content: flex-start; gap: 14px; overflow-x: auto; }
+  .nav-link { flex: 0 0 auto; font-size: 8px; letter-spacing: .7px; white-space: nowrap; }
   .join-link { gap: 9px; padding: 11px 10px; font-size: 8px; }
+  .applications-link { padding: 8px 7px; font-size: 7px; letter-spacing: .2px; }
   .media-header-actions { gap: 5px; }
   .media-login-button { min-height: 32px; padding: 0 8px; font-size: 8px; }
   .hero-banner { min-height: 340px; background-position: center, center, 57% 62%; scroll-margin-top: 101px; }

@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" href="EE2156BC-09BC-4624-B251-CAFA8B431EBB.png">
     <title>Заявка до сім'ї Yakuza</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="../auth.js" defer></script>
     <script src="app.js" defer></script>
   </head>
   <body>
@@ -19,13 +20,14 @@
         <span class="brand-name"><span>FAMILY</span></span>
         <span class="brand-rule" aria-hidden="true"></span>
         <span class="brand-caption">Набір до сім'ї</span>
+        <a class="applications-link" href="applications.html">ТАБЛИЦЯ ЗАЯВОК <span aria-hidden="true">↗</span></a>
       </header>
 
       <section class="application" aria-labelledby="page-title">
         <div class="intro">
           <p class="eyebrow"><span aria-hidden="true"></span> ВІДКРИТИЙ НАБІР</p>
           <h1 id="page-title">Твоя історія<br>починається <span>тут.</span></h1>
-          <p class="intro-copy">Розкажи трохи про себе. Заповни заявку — наша команда зв'яжеться з тобою в Discord.</p>
+          <p class="intro-copy">Заповни анкету — заявка надійде адміністрації сім'ї для розгляду.</p>
           <div class="note">
             <span class="note-symbol" aria-hidden="true">!</span>
             <p>Не вказуй паролі чи інші секретні дані. Потрібен лише твій ігровий нік та Discord.</p>
@@ -43,18 +45,18 @@
 
           <div class="fields">
             <label class="field">
-              <span>Ігровий нік <span class="required">*</span></span>
-              <input name="nickname" type="text" autocomplete="nickname" maxlength="60" placeholder="Як тебе знайти у грі" required>
+              <span>Ігровий нік</span>
+              <input name="nickname" type="text" autocomplete="nickname" maxlength="60" placeholder="Як тебе знайти у грі">
             </label>
 
             <label class="field">
-              <span>Вік <span class="required">*</span></span>
-              <input name="age" type="number" min="1" max="100" inputmode="numeric" placeholder="Твій вік" required>
+              <span>Вік</span>
+              <input name="age" type="number" min="1" max="100" inputmode="numeric" placeholder="Твій вік">
             </label>
 
             <label class="field">
-              <span>Discord <span class="required">*</span></span>
-              <input name="discord" type="text" autocomplete="off" maxlength="80" placeholder="Твій Discord" required>
+              <span>Discord</span>
+              <input name="discord" type="text" autocomplete="off" maxlength="80" placeholder="Твій Discord">
             </label>
 
             <label class="field">
@@ -63,8 +65,8 @@
             </label>
 
             <label class="field field-wide">
-              <span>Чому хочеш до сім'ї? <span class="required">*</span></span>
-              <textarea name="motivation" rows="4" maxlength="1000" placeholder="Розкажи кілька слів про себе та свою мотивацію" required></textarea>
+              <span>Чому хочеш до сім'ї?</span>
+              <textarea name="motivation" rows="4" maxlength="1000" placeholder="Розкажи кілька слів про себе та свою мотивацію"></textarea>
             </label>
 
             <label class="field field-wide">
@@ -74,12 +76,12 @@
           </div>
 
           <label class="consent">
-            <input name="consent" type="checkbox" required>
+            <input name="consent" type="checkbox">
             <span>Погоджуюся передати ці дані адміністрації сім'ї для розгляду заявки.</span>
           </label>
 
           <div class="form-footer">
-            <p class="required-hint"><span class="required">*</span> Обов'язкові поля</p>
+            <p class="required-hint">Усі поля необов'язкові</p>
             <button class="submit-button" id="submit-button" type="submit" disabled>
               <span>Надіслати заявку</span>
               <span aria-hidden="true">↗</span>

@@ -15,14 +15,12 @@ const mediaLoginForm = document.querySelector("#media-login-form");
 const mediaLoginError = document.querySelector("#media-login-error");
 const mediaAccessNote = document.querySelector("#media-access-note");
 const sessionKey = "business-directory-demo-user";
-const demoCredentials = { email: "yakuzaukr01@gmail.com", password: "Yakuza_ukr001" };
 let database;
 let activeFilter = "all";
 let objectUrls = [];
 let toastTimeout;
-let isLoggedIn = false;
-
-try { isLoggedIn = sessionStorage.getItem(sessionKey) === "true"; } catch { /* Keep this tab in public mode. */ }
+let sessionToken = sessionStorage.getItem(sessionKey) || "";
+let isLoggedIn = Boolean(sessionToken);
 
 function openDatabase() {
   return new Promise((resolve, reject) => {
@@ -52,12 +50,21 @@ function renderAccessState() {
   if (database) loadMedia();
 }
 
-mediaLoginButton.addEventListener("click", () => {
+mediaLoginButton.addEventListener("click", async () => {
   if (isLoggedIn) {
     isLoggedIn = false;
-    try { sessionStorage.removeItem(sessionKey); } catch { /* The public view remains available. */ }
+    const token = sessionToken;
+    sessionToken = "";
+    sessionStorage.removeItem(sessionKey);
     renderAccessState();
     showToast("Ви вийшли з Media.");
+    if (token) {
+      try {
+        await window.YakuzaAuth.request("logout", { token });
+      } catch (error) {
+        showToast(error.message || "Не вдалося завершити сеанс на сервері.");
+      }
+    }
     return;
   }
   mediaLoginError.hidden = true;
@@ -65,20 +72,55 @@ mediaLoginButton.addEventListener("click", () => {
   mediaLoginDialog.showModal();
 });
 
-mediaLoginForm.addEventListener("submit", (event) => {
+mediaLoginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const email = document.querySelector("#media-login-email").value.trim().toLowerCase();
   const password = document.querySelector("#media-login-password").value;
-  if (email !== demoCredentials.email || password !== demoCredentials.password) {
+  const submitButton = mediaLoginForm.querySelector('[type="submit"]');
+  submitButton.disabled = true;
+  try {
+    const token = await window.YakuzaAuth.authenticate(email, password);
+    if (!token) {
+      mediaLoginError.textContent = "Неправильний логін або пароль.";
+      mediaLoginError.hidden = false;
+      return;
+    }
+    sessionToken = token;
+    isLoggedIn = true;
+    sessionStorage.setItem(sessionKey, token);
+    mediaLoginError.hidden = true;
+    mediaLoginDialog.close();
+    renderAccessState();
+    if (sessionToken === "true") {
+      sessionToken = "";
+      isLoggedIn = false;
+      sessionStorage.removeItem(sessionKey);
+    }
+    if (sessionToken) {
+      window.YakuzaAuth.request("verify", { token: sessionToken })
+        .then((response) => {
+          isLoggedIn = response.status === "success";
+          if (!isLoggedIn) {
+            sessionToken = "";
+            sessionStorage.removeItem(sessionKey);
+          }
+          renderAccessState();
+        })
+        .catch((error) => {
+          isLoggedIn = false;
+          sessionToken = "";
+          sessionStorage.removeItem(sessionKey);
+          renderAccessState();
+          showToast(error.message || "Не вдалося перевірити сеанс.");
+        });
+    }
+    showToast("Вхід до Media виконано.");
+  } catch (error) {
+    mediaLoginError.textContent = error.message || "Не вдалося виконати вхід.";
     mediaLoginError.hidden = false;
-    return;
+  } finally {
+    submitButton.disabled = false;
   }
-  isLoggedIn = true;
-  try { sessionStorage.setItem(sessionKey, "true"); } catch { /* Keep this tab signed in until it closes. */ }
-  mediaLoginError.hidden = true;
-  mediaLoginDialog.close();
-  renderAccessState();
-  showToast("Вхід до Media виконано.");
 });
 
 document.querySelectorAll("[data-login-close]").forEach((button) => {
