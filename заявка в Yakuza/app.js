@@ -55,5 +55,11 @@ window.addEventListener("message", (event) => {
   }
 
   status.dataset.state = "error";
-  status.textContent = "Не вдалося зберегти заявку. Перевір вік (1–100) та спробуй пізніше.";
+  if (event.data.status === "invalid-age") {
+    status.textContent = "Вік має бути цілим числом від 1 до 100.";
+  } else if (event.data.status === "storage-error") {
+    status.textContent = "Сервер не зміг зберегти заявку. Адміністратору потрібно налаштувати сховище та доступ Apps Script до Google Drive.";
+  } else {
+    status.textContent = "Не вдалося зберегти заявку. Спробуй ще раз пізніше.";
+  }
 });

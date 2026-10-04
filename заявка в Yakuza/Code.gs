@@ -1,14 +1,5 @@
-const SPREADSHEET_ID = "144NFN1wzg4xji8kz4RtDKn-fJQkwz-N-7RrtjmUesmo";
-const SHEET_NAME = "Заявки Yakuza";
-const HEADERS = [
-  "Час подання",
-  "Ігровий нік",
-  "Вік",
-  "Discord",
-  "Коли онлайн",
-  "Мотивація",
-  "Попередні сім'ї"
-];
+const APPLICATIONS_FILE_PROPERTY = "APPLICATIONS_DATA_FILE_ID";
+const APPLICATIONS_FILE_NAME = "yakuza-applications.json";
 
 function doPost(event) {
   const values = event && event.parameter ? event.parameter : {};
@@ -18,10 +9,15 @@ function doPost(event) {
     if (values.action === "verify") return apiResponse_("success", {}, values.requestId);
     return listApplications_(values.requestId);
   }
+  if (values.action === "updateApplicationStatus") {
+    if (!isValidSession_(values.token)) return apiResponse_("unauthorized", {}, values.requestId);
+    return updateApplicationStatus_(values, values.requestId);
+  }
   if (values.action === "logout") {
     logout_(values.token);
     return apiResponse_("success", {}, values.requestId);
   }
+  if (values.action) return apiResponse_("unsupported-action", {}, values.requestId);
 
   if (values.website) return response_("success", values.requestId);
 
@@ -36,37 +32,31 @@ function doPost(event) {
 
   const age = application.age ? Number(application.age) : "";
   if (application.age && (!Number.isInteger(age) || age < 1 || age > 100)) {
-    return response_("error", values.requestId);
+    return response_("invalid-age", values.requestId);
   }
 
   const lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000);
-    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
-    let sheet = spreadsheet.getSheetByName(SHEET_NAME);
-    if (!sheet) sheet = spreadsheet.insertSheet(SHEET_NAME);
-
-    if (sheet.getLastRow() === 0) {
-      sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
-      sheet.setFrozenRows(1);
-    } else {
-      sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
-    }
-
-    const row = [
-      new Date(),
-      safeCell_(application.nickname),
-      age,
-      safeCell_(application.discord),
-      safeCell_(application.onlineTime),
-      safeCell_(application.motivation),
-      safeCell_(application.previousFamilies)
-    ];
-    sheet.appendRow(row);
+    const file = getApplicationsFile_(true);
+    const applications = JSON.parse(file.getBlob().getDataAsString("UTF-8"));
+    if (!Array.isArray(applications)) throw new Error("Applications storage is not a list.");
+    applications.push({
+      id: Utilities.getUuid(),
+      submittedAt: new Date().toISOString(),
+      status: "pending",
+      nickname: application.nickname,
+      age: age,
+      discord: application.discord,
+      onlineTime: application.onlineTime,
+      motivation: application.motivation,
+      previousFamilies: application.previousFamilies
+    });
+    file.setContent(JSON.stringify(applications));
     return response_("success", values.requestId);
   } catch (error) {
     console.error("Unable to save Yakuza application: " + error);
-    return response_("error", values.requestId);
+    return response_("storage-error", values.requestId);
   } finally {
     if (lock.hasLock()) lock.releaseLock();
   }
@@ -115,36 +105,83 @@ function logout_(token) {
 }
 
 function listApplications_(requestId) {
+  const lock = LockService.getScriptLock();
   try {
-    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const sheet = spreadsheet.getSheetByName(SHEET_NAME);
-    if (!sheet || sheet.getLastRow() < 2) return apiResponse_("success", { applications: [] }, requestId);
-
-    const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, HEADERS.length).getDisplayValues();
-    const applications = rows.map(function (row) {
-      return {
-        submittedAt: row[0],
-        nickname: row[1],
-        age: row[2],
-        discord: row[3],
-        onlineTime: row[4],
-        motivation: row[5],
-        previousFamilies: row[6]
-      };
+    lock.waitLock(10000);
+    const file = getApplicationsFile_(false);
+    if (!file) return apiResponse_("success", { applications: [] }, requestId);
+    const applications = JSON.parse(file.getBlob().getDataAsString("UTF-8"));
+    if (!Array.isArray(applications)) throw new Error("Applications storage is not a list.");
+    let migrated = false;
+    applications.forEach(function (application) {
+      if (!application.id) {
+        application.id = Utilities.getUuid();
+        migrated = true;
+      }
+      if (!application.status) {
+        application.status = "pending";
+        migrated = true;
+      }
     });
+    if (migrated) file.setContent(JSON.stringify(applications));
     return apiResponse_("success", { applications: applications }, requestId);
   } catch (error) {
     console.error("Unable to load Yakuza applications: " + error);
     return apiResponse_("error", {}, requestId);
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
   }
+}
+
+function updateApplicationStatus_(values, requestId) {
+  const allowedStatuses = ["pending", "accepted", "rejected"];
+  const applicationId = String(values.applicationId || "");
+  const status = String(values.status || "");
+  if (!applicationId || applicationId.length > 100 || allowedStatuses.indexOf(status) === -1) {
+    return apiResponse_("error", {}, requestId);
+  }
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    const file = getApplicationsFile_(false);
+    if (!file) return apiResponse_("not-found", {}, requestId);
+    const applications = JSON.parse(file.getBlob().getDataAsString("UTF-8"));
+    if (!Array.isArray(applications)) throw new Error("Applications storage is not a list.");
+    const application = applications.find(function (item) {
+      return item.id === applicationId;
+    });
+    if (!application) return apiResponse_("not-found", {}, requestId);
+
+    application.status = status;
+    file.setContent(JSON.stringify(applications));
+    return apiResponse_("success", { applicationId: applicationId, applicationStatus: status }, requestId);
+  } catch (error) {
+    console.error("Unable to update Yakuza application status: " + error);
+    return apiResponse_("error", {}, requestId);
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
+  }
+}
+
+function getApplicationsFile_(createIfMissing) {
+  const properties = PropertiesService.getScriptProperties();
+  const fileId = properties.getProperty(APPLICATIONS_FILE_PROPERTY);
+  if (fileId) return DriveApp.getFileById(fileId);
+  if (!createIfMissing) return null;
+
+  const file = DriveApp.createFile(APPLICATIONS_FILE_NAME, "[]", MimeType.PLAIN_TEXT);
+  properties.setProperty(APPLICATIONS_FILE_PROPERTY, file.getId());
+  return file;
+}
+
+function setupApplicationsStorage() {
+  getApplicationsFile_(true);
+  Logger.log("Приватне сховище заявок створено на Google Drive власника скрипту.");
 }
 
 function clean_(value, maxLength) {
   return String(value || "").trim().slice(0, maxLength);
-}
-
-function safeCell_(value) {
-  return /^[\s]*[=+\-@]/.test(value) ? "'" + value : value;
 }
 
 function response_(status, requestId) {
@@ -160,8 +197,9 @@ function apiResponse_(status, details, requestId) {
 
 function htmlResponse_(message) {
   const payload = JSON.stringify(JSON.stringify(message));
+  const script = "window.parent.parent.parent.parent.postMessage(JSON.parse(" + payload + "), '*');";
   const html = '<!doctype html><html><body><script>'
-    + 'window.parent.parent.parent.postMessage(JSON.parse(' + payload + '),"*");'
+    + script
     + '</script></body></html>';
   return HtmlService.createHtmlOutput(html)
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);

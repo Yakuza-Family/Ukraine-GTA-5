@@ -532,6 +532,65 @@ h1 span {
   vertical-align: top;
 }
 
+.application-decision-cell {
+  min-width: 190px;
+}
+
+.application-decision {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.decision-button {
+  padding: 6px 8px;
+  border: 1px solid #494441;
+  background: #191817;
+  color: #d1ccc7;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.decision-button:hover:not(:disabled) {
+  border-color: #b6aaa2;
+}
+
+.decision-button:disabled {
+  cursor: default;
+  opacity: .55;
+}
+
+.decision-accepted[aria-pressed="true"] {
+  border-color: #3d8c5e;
+  background: #183323;
+  color: #a8e3b9;
+  opacity: 1;
+}
+
+.decision-rejected[aria-pressed="true"] {
+  border-color: #a3443e;
+  background: #391d1b;
+  color: #ffaaa3;
+  opacity: 1;
+}
+
+.decision-pending[aria-pressed="true"] {
+  border-color: #77706a;
+  background: #302d2a;
+  color: #e2d5c8;
+  opacity: 1;
+}
+
+.decision-state {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+}
+
+.decision-state-accepted { color: #a8e3b9; }
+.decision-state-rejected { color: #ffaaa3; }
+.decision-state-pending { color: #aaa5a0; }
+
 .applications-empty {
   padding: 38px 20px;
   color: #aaa5a0;

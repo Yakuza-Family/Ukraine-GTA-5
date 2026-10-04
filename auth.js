@@ -18,9 +18,16 @@
           form.remove();
         };
         const onMessage = (event) => {
-          if (event.data?.type !== "yakuza-api" || event.data.requestId !== requestId) return;
+          if (event.data?.requestId !== requestId) return;
+          if (event.data.type !== "yakuza-api" && event.data.type !== "yakuza-application") return;
           cleanup();
-          resolve(event.data);
+          if (event.data.type === "yakuza-api") {
+            resolve(event.data);
+            return;
+          }
+          if (event.data.type === "yakuza-application") {
+            reject(new Error("Опублікована версія Apps Script застаріла. Онови Code.gs і опублікуй нову версію вебзастосунку."));
+          }
         };
 
         Object.entries({ action, ...values, requestId }).forEach(([name, value]) => {

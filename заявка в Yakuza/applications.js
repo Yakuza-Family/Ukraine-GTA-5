@@ -24,6 +24,7 @@ function renderApplications(applications) {
   applicationsRows.replaceChildren();
   applications.forEach((application) => {
     const row = document.createElement("tr");
+    row.dataset.applicationId = application.id;
     [
       application.submittedAt,
       application.nickname,
@@ -37,10 +38,89 @@ function renderApplications(applications) {
       cell.textContent = value || "—";
       row.append(cell);
     });
+
+    const statusCell = document.createElement("td");
+    statusCell.className = "application-decision-cell";
+    const controls = document.createElement("div");
+    controls.className = "application-decision";
+    [
+      { value: "accepted", label: "Прийняти" },
+      { value: "rejected", label: "Відхилити" },
+      { value: "pending", label: "На розгляді" }
+    ].forEach(({ value, label }) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `decision-button decision-${value}`;
+      button.dataset.status = value;
+      button.textContent = label;
+      button.setAttribute("aria-pressed", String((application.status || "pending") === value));
+      button.disabled = (application.status || "pending") === value;
+      controls.append(button);
+    });
+    const state = document.createElement("span");
+    state.className = `decision-state decision-state-${application.status || "pending"}`;
+    state.textContent = {
+      accepted: "Прийнята",
+      rejected: "Відхилена",
+      pending: "На розгляді"
+    }[application.status || "pending"];
+    statusCell.append(controls, state);
+    row.append(statusCell);
     applicationsRows.append(row);
   });
   emptyState.hidden = applications.length > 0;
 }
+
+applicationsRows.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-status]");
+  const row = button?.closest("[data-application-id]");
+  const token = sessionStorage.getItem(SESSION_KEY);
+  if (!button || !row || !token || button.disabled) return;
+
+  const buttons = row.querySelectorAll("[data-status]");
+  buttons.forEach((item) => { item.disabled = true; });
+  setStatus("Зберігаємо рішення…");
+  try {
+    const response = await window.YakuzaAuth.request("updateApplicationStatus", {
+      token,
+      applicationId: row.dataset.applicationId,
+      status: button.dataset.status
+    });
+    if (response.status === "unauthorized") {
+      sessionStorage.removeItem(SESSION_KEY);
+      showLogin("Сеанс завершився. Увійди ще раз.", "error");
+      return;
+    }
+    if (response.status !== "success") {
+      const messages = {
+        "not-found": "Заявку не знайдено. Онови таблицю.",
+        "unsupported-action": "Опублікована версія Apps Script застаріла. Онови Code.gs і опублікуй нову версію вебзастосунку."
+      };
+      throw new Error(messages[response.status] || "Не вдалося зберегти рішення.");
+    }
+
+    const selectedStatus = response.applicationStatus;
+    if (!["pending", "accepted", "rejected"].includes(selectedStatus)) {
+      throw new Error("Сервер повернув невідоме рішення. Онови таблицю.");
+    }
+    row.querySelectorAll("[data-status]").forEach((item) => {
+      const isSelected = item.dataset.status === selectedStatus;
+      item.setAttribute("aria-pressed", String(isSelected));
+      item.disabled = isSelected;
+    });
+    const state = row.querySelector(".decision-state");
+    state.className = `decision-state decision-state-${selectedStatus}`;
+    state.textContent = {
+      accepted: "Прийнята",
+      rejected: "Відхилена",
+      pending: "На розгляді"
+    }[selectedStatus];
+    setStatus("Рішення збережено.");
+  } catch (error) {
+    buttons.forEach((item) => { item.disabled = false; });
+    setStatus(error.message || "Не вдалося зберегти рішення.", "error");
+  }
+});
 
 async function loadApplications(token) {
   setStatus("Завантажуємо заявки…");
