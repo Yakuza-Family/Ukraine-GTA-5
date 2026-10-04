@@ -18,6 +18,8 @@ const sessionKey = "business-directory-demo-user";
 let database;
 let activeFilter = "all";
 let objectUrls = [];
+let sharedMedia = [];
+let localMedia = [];
 let toastTimeout;
 let sessionToken = sessionStorage.getItem(sessionKey) || "";
 let isLoggedIn = Boolean(sessionToken);
@@ -26,8 +28,10 @@ function openDatabase() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
     request.addEventListener("upgradeneeded", () => {
-      const store = request.result.createObjectStore(STORE_NAME, { keyPath: "id" });
-      store.createIndex("createdAt", "createdAt");
+      if (!request.result.objectStoreNames.contains(STORE_NAME)) {
+        const store = request.result.createObjectStore(STORE_NAME, { keyPath: "id" });
+        store.createIndex("createdAt", "createdAt");
+      }
     });
     request.addEventListener("success", () => resolve(request.result));
     request.addEventListener("error", () => reject(request.error));
@@ -45,9 +49,9 @@ function renderAccessState() {
   mediaLoginButton.textContent = isLoggedIn ? "ВИЙТИ" : "УВІЙТИ";
   mediaLoginButton.setAttribute("aria-label", isLoggedIn ? "Вийти з Media" : "Увійти в Media");
   mediaAccessNote.textContent = isLoggedIn
-    ? "Додавати посилання можуть усі. Ви увійшли й можете видаляти записи."
-    : "Додавати посилання можуть усі. Щоб видаляти, увійди.";
-  if (database) loadMedia();
+    ? "Посилання спільні для всіх відвідувачів. Ви увійшли й можете видаляти записи."
+    : "Посилання спільні для всіх відвідувачів. Щоб видаляти, увійди.";
+  if (database) loadLocalMedia();
 }
 
 mediaLoginButton.addEventListener("click", async () => {
@@ -143,10 +147,34 @@ function getYouTubeVideoId(value) {
   return "";
 }
 
-function loadMedia() {
+function loadLocalMedia() {
+  if (!database) {
+    localMedia = [];
+    renderMedia([...sharedMedia]);
+    return;
+  }
   const request = database.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll();
-  request.addEventListener("success", () => renderMedia(request.result));
+  request.addEventListener("success", () => {
+    localMedia = request.result.map((record) => ({ ...record, source: "local" }));
+    renderMedia([...sharedMedia, ...localMedia]);
+  });
   request.addEventListener("error", () => showToast("Не вдалося завантажити медіатеку."));
+}
+
+async function loadMedia() {
+  try {
+    const response = await window.YakuzaAuth.request("listMedia");
+    if (response.status !== "success" || !Array.isArray(response.media)) {
+      throw new Error(response.status === "unsupported-action"
+        ? "Потрібно оновити й опублікувати Code.gs в Apps Script."
+        : "Не вдалося завантажити спільну медіатеку.");
+    }
+    sharedMedia = response.media.map((record) => ({ ...record, source: "shared" }));
+    loadLocalMedia();
+  } catch (error) {
+    showToast(error.message || "Не вдалося завантажити спільну медіатеку.");
+    loadLocalMedia();
+  }
 }
 
 function renderMedia(records) {
@@ -242,6 +270,7 @@ function renderMedia(records) {
     remove.title = "Видалити файл";
     remove.setAttribute("aria-label", `Видалити ${record.name}`);
     remove.dataset.deleteId = record.id;
+    remove.dataset.deleteSource = record.source || "local";
     remove.textContent = "×";
     actions.append(download);
     if (isLoggedIn) actions.append(remove);
@@ -250,7 +279,7 @@ function renderMedia(records) {
   });
 }
 
-mediaLinkForm.addEventListener("submit", (event) => {
+mediaLinkForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   let mediaUrl;
   try {
@@ -267,24 +296,33 @@ mediaLinkForm.addEventListener("submit", (event) => {
   let name = filename || mediaUrl.hostname;
   try { name = decodeURIComponent(name); } catch { /* Keep the original URL path segment. */ }
   const record = {
-    id: crypto.randomUUID(),
     name,
     kind: mediaKindInput.value,
-    size: 0,
-    createdAt: Date.now(),
     url: mediaUrl.href
   };
-  const transaction = database.transaction(STORE_NAME, "readwrite");
-  transaction.objectStore(STORE_NAME).add(record);
-  transaction.addEventListener("complete", () => {
+  const submitButton = mediaLinkForm.querySelector('[type="submit"]');
+  submitButton.disabled = true;
+  try {
+    const response = await window.YakuzaAuth.request("addMedia", record);
+    if (response.status !== "success" || !response.record) {
+      throw new Error(response.status === "unsupported-action"
+        ? "Щоб зберігати посилання для всіх, онови й опублікуй Code.gs в Apps Script."
+        : response.status === "invalid-media"
+          ? "Перевір посилання та тип медіа."
+          : "Не вдалося зберегти посилання на сервері.");
+    }
     mediaLinkForm.reset();
-    loadMedia();
+    sharedMedia = [{ ...response.record, source: "shared" }, ...sharedMedia];
+    renderMedia([...sharedMedia, ...localMedia]);
     showToast("Посилання додано до медіатеки.");
-  });
-  transaction.addEventListener("error", () => showToast("Не вдалося зберегти посилання."));
+  } catch (error) {
+    showToast(error.message || "Не вдалося зберегти посилання.");
+  } finally {
+    submitButton.disabled = false;
+  }
 });
 
-mediaSearch.addEventListener("input", loadMedia);
+mediaSearch.addEventListener("input", () => renderMedia([...sharedMedia, ...localMedia]));
 document.querySelectorAll(".media-filter").forEach((button) => {
   button.addEventListener("click", () => {
     activeFilter = button.dataset.filter;
@@ -293,11 +331,11 @@ document.querySelectorAll(".media-filter").forEach((button) => {
       item.classList.toggle("active", selected);
       item.setAttribute("aria-pressed", String(selected));
     });
-    loadMedia();
+    renderMedia([...sharedMedia, ...localMedia]);
   });
 });
 
-mediaGrid.addEventListener("click", (event) => {
+mediaGrid.addEventListener("click", async (event) => {
   const deleteButton = event.target.closest("[data-delete-id]");
   if (!deleteButton) return;
   if (!isLoggedIn) {
@@ -306,22 +344,51 @@ mediaGrid.addEventListener("click", (event) => {
     return;
   }
   if (!confirm("Видалити цей файл з медіатеки?")) return;
+  if (deleteButton.dataset.deleteSource === "shared") {
+    deleteButton.disabled = true;
+    try {
+      const response = await window.YakuzaAuth.request("deleteMedia", {
+        token: sessionToken,
+        mediaId: deleteButton.dataset.deleteId
+      });
+      if (response.status === "unauthorized") {
+        sessionToken = "";
+        isLoggedIn = false;
+        sessionStorage.removeItem(sessionKey);
+        renderAccessState();
+        throw new Error("Сеанс завершився. Увійди знову.");
+      }
+      if (response.status !== "success") {
+        throw new Error(response.status === "unsupported-action"
+          ? "Онови й опублікуй Code.gs в Apps Script."
+          : "Не вдалося видалити спільний запис.");
+      }
+      sharedMedia = sharedMedia.filter((record) => record.id !== deleteButton.dataset.deleteId);
+      renderMedia([...sharedMedia, ...localMedia]);
+      showToast("Файл видалено.");
+    } catch (error) {
+      deleteButton.disabled = false;
+      showToast(error.message || "Не вдалося видалити запис.");
+    }
+    return;
+  }
+  if (!database) {
+    showToast("Локальне сховище недоступне.");
+    return;
+  }
   const transaction = database.transaction(STORE_NAME, "readwrite");
   transaction.objectStore(STORE_NAME).delete(deleteButton.dataset.deleteId);
   transaction.addEventListener("complete", () => {
-    loadMedia();
+    loadLocalMedia();
     showToast("Файл видалено.");
   });
 });
 
 openDatabase().then((openedDatabase) => {
   database = openedDatabase;
-  loadMedia();
-}).catch(() => {
-  mediaEmpty.hidden = false;
-  mediaEmpty.querySelector("strong").textContent = "Сховище медіа недоступне";
-  mediaEmpty.querySelector("span:not(.empty-mark)").textContent = "Відкрий сайт у звичайному браузері або ввімкни IndexedDB для локальних файлів.";
-  showToast("Браузер не надав доступ до IndexedDB.");
-});
+  loadLocalMedia();
+}).catch(() => showToast("Локальне сховище недоступне; спільні посилання працюють окремо."));
 
+loadMedia();
+window.setInterval(loadMedia, 60000);
 renderAccessState();

@@ -1,9 +1,17 @@
 const APPLICATIONS_FILE_PROPERTY = "APPLICATIONS_DATA_FILE_ID";
 const APPLICATIONS_FILE_NAME = "yakuza-applications.json";
+const MEDIA_FILE_PROPERTY = "MEDIA_DATA_FILE_ID";
+const MEDIA_FILE_NAME = "yakuza-media.json";
 
 function doPost(event) {
   const values = event && event.parameter ? event.parameter : {};
   if (values.action === "login") return login_(values);
+  if (values.action === "listMedia") return listMedia_(values.requestId);
+  if (values.action === "addMedia") return addMedia_(values, values.requestId);
+  if (values.action === "deleteMedia") {
+    if (!isValidSession_(values.token)) return apiResponse_("unauthorized", {}, values.requestId);
+    return deleteMedia_(values, values.requestId);
+  }
   if (values.action === "verify" || values.action === "listApplications") {
     if (!isValidSession_(values.token)) return apiResponse_("unauthorized", {}, values.requestId);
     if (values.action === "verify") return apiResponse_("success", {}, values.requestId);
@@ -172,6 +180,93 @@ function getApplicationsFile_(createIfMissing) {
 
   const file = DriveApp.createFile(APPLICATIONS_FILE_NAME, "[]", MimeType.PLAIN_TEXT);
   properties.setProperty(APPLICATIONS_FILE_PROPERTY, file.getId());
+  return file;
+}
+
+function listMedia_(requestId) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    const file = getMediaFile_(false);
+    if (!file) return apiResponse_("success", { media: [] }, requestId);
+    const media = JSON.parse(file.getBlob().getDataAsString("UTF-8"));
+    if (!Array.isArray(media)) throw new Error("Media storage is not a list.");
+    return apiResponse_("success", { media: media }, requestId);
+  } catch (error) {
+    console.error("Unable to load Yakuza media: " + error);
+    return apiResponse_("error", {}, requestId);
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
+  }
+}
+
+function addMedia_(values, requestId) {
+  const name = clean_(values.name, 200);
+  const kind = String(values.kind || "");
+  const url = String(values.url || "").trim();
+  if (!name || (kind !== "image" && kind !== "video") || url.length > 2000 ||
+      !/^https?:\/\/[^\s]+$/i.test(url)) {
+    return apiResponse_("invalid-media", {}, requestId);
+  }
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    const file = getMediaFile_(true);
+    const media = JSON.parse(file.getBlob().getDataAsString("UTF-8"));
+    if (!Array.isArray(media)) throw new Error("Media storage is not a list.");
+    const record = {
+      id: Utilities.getUuid(),
+      name: name,
+      kind: kind,
+      size: 0,
+      createdAt: Date.now(),
+      url: url
+    };
+    media.push(record);
+    file.setContent(JSON.stringify(media));
+    return apiResponse_("success", { record: record }, requestId);
+  } catch (error) {
+    console.error("Unable to save Yakuza media: " + error);
+    return apiResponse_("error", {}, requestId);
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
+  }
+}
+
+function deleteMedia_(values, requestId) {
+  const mediaId = String(values.mediaId || "");
+  if (!mediaId || mediaId.length > 100) return apiResponse_("invalid-media", {}, requestId);
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    const file = getMediaFile_(false);
+    if (!file) return apiResponse_("not-found", {}, requestId);
+    const media = JSON.parse(file.getBlob().getDataAsString("UTF-8"));
+    if (!Array.isArray(media)) throw new Error("Media storage is not a list.");
+    const remainingMedia = media.filter(function (record) {
+      return record.id !== mediaId;
+    });
+    if (remainingMedia.length === media.length) return apiResponse_("not-found", {}, requestId);
+    file.setContent(JSON.stringify(remainingMedia));
+    return apiResponse_("success", {}, requestId);
+  } catch (error) {
+    console.error("Unable to delete Yakuza media: " + error);
+    return apiResponse_("error", {}, requestId);
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
+  }
+}
+
+function getMediaFile_(createIfMissing) {
+  const properties = PropertiesService.getScriptProperties();
+  const fileId = properties.getProperty(MEDIA_FILE_PROPERTY);
+  if (fileId) return DriveApp.getFileById(fileId);
+  if (!createIfMissing) return null;
+
+  const file = DriveApp.createFile(MEDIA_FILE_NAME, "[]", MimeType.PLAIN_TEXT);
+  properties.setProperty(MEDIA_FILE_PROPERTY, file.getId());
   return file;
 }
 
